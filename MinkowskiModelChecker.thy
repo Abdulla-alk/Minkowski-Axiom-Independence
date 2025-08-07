@@ -2,90 +2,90 @@ theory MinkowskiModelChecker
   imports MinkowskiTheoremProving "HOL.Complex_Main"
 begin
 
-(*\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>*)
-section \<open>Finite slices of Minkowski space\<close>
+(*─────────────────────────────────────────────────────────────────────────*)
+section ‹Finite slices of Minkowski space›
 
-type_synonym point = "real \<times> real"
+type_synonym point = "real × real"
 
-text \<open>The future order: “go north‑east”.\<close>
-definition Rel :: "point \<Rightarrow> point \<Rightarrow> bool"  (infix "\<preceq>" 50) where
-  "p \<preceq> q \<longleftrightarrow> (fst p < fst q \<and> snd p < snd q)"
+text ‹The future order: “go north‑east”.›
+definition Rel :: "point ⇒ point ⇒ bool"  (infix "≼" 50) where
+  "p ≼ q ⟷ (fst p < fst q ∧ snd p < snd q)"
 
 
 locale Finite_Minkowski =
-  fixes W   :: "point set"                     \<comment> \<open>worlds (finite)\<close>
-    and Val :: "'p \<Rightarrow> point \<Rightarrow> bool"             \<comment> \<open>valuation\<close>
+  fixes W   :: "point set"                     ― ‹worlds (finite)›
+    and Val :: "'p ⇒ point ⇒ bool"             ― ‹valuation›
   assumes finite_W: "finite W"
-      and  closed: "\<lbrakk> p \<preceq> q;  p \<in> W \<rbrakk> \<Longrightarrow> q \<in> W"
+      and  closed: "⟦ p ≼ q;  p ∈ W ⟧ ⟹ q ∈ W"
 begin
 
-lemma trans:  "p \<preceq> q \<Longrightarrow> q \<preceq> r \<Longrightarrow> p \<preceq> r"
+lemma trans:  "p ≼ q ⟹ q ≼ r ⟹ p ≼ r"
   by (auto simp: Rel_def)
 
-lemma irrefl: "\<not>(p \<preceq> p)"
+lemma irrefl: "¬(p ≼ p)"
   by (simp add: Rel_def)
 
 lemma dense:
-  assumes "p \<preceq> r" and "p \<noteq> r"
-  shows   "\<exists>q\<in>W. p \<preceq> q \<and> q \<preceq> r \<and> q \<noteq> p \<and> q \<noteq> r"
+  assumes "p ≼ r" and "p ≠ r"
+  shows   "∃q∈W. p ≼ q ∧ q ≼ r ∧ q ≠ p ∧ q ≠ r"
 proof -
   obtain x1 y1 x2 y2 where p: "p=(x1,y1)" and r: "r=(x2,y2)" by (cases p, cases r)
-  with assms have "x1 \<le> x2 \<and> y1 \<le> y2 \<and> (x1<x2 \<or> y1<y2)" by (auto simp: Rel_def)
+  with assms have "x1 ≤ x2 ∧ y1 ≤ y2 ∧ (x1<x2 ∨ y1<y2)" by (auto simp: Rel_def)
   then consider "x1 < x2" | "y1 < y2" by linarith
   thus ?thesis
   proof cases
     case 1
     let ?q = "((x1+x2)/2, y1)"
-    have "?q \<in> W" using closed[of p ?q] assms p r 1
+    have "?q ∈ W" using closed[of p ?q] assms p r 1
       by (auto simp: Rel_def)
-    moreover have "p \<preceq> ?q \<and> ?q \<preceq> r \<and> ?q \<noteq> p \<and> ?q \<noteq> r"
+    moreover have "p ≼ ?q ∧ ?q ≼ r ∧ ?q ≠ p ∧ ?q ≠ r"
       using 1 assms p r by (auto simp: Rel_def)
     ultimately show ?thesis by blast
   next
     case 2
     let ?q = "(x1, (y1+y2)/2)"
-    have "?q \<in> W" using closed[of p ?q] assms p r 2
+    have "?q ∈ W" using closed[of p ?q] assms p r 2
       by (auto simp: Rel_def)
-    moreover have "p \<preceq> ?q \<and> ?q \<preceq> r \<and> ?q \<noteq> p \<and> ?q \<noteq> r"
+    moreover have "p ≼ ?q ∧ ?q ≼ r ∧ ?q ≠ p ∧ ?q ≠ r"
       using 2 assms p r by (auto simp: Rel_def)
     ultimately show ?thesis by blast
   qed
 qed
 
-lemma serial: "\<exists>q\<in>W. p \<preceq> q"
+lemma serial: "∃q∈W. p ≼ q"
 proof -
-  have "(fst p, snd p + 1) \<in> W" using finite_W
+  have "(fst p, snd p + 1) ∈ W" using finite_W
     by (cases p, auto simp: finite_W)
-  moreover have "p \<preceq> (fst p, snd p + 1)" by (auto simp: Rel_def)
+  moreover have "p ≼ (fst p, snd p + 1)" by (auto simp: Rel_def)
   ultimately show ?thesis by blast
 qed
 
-(*\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow> semantic truth definition \<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>*)
+(*────────────────── semantic truth definition ──────────────────*)
 
-primrec eval :: "point \<Rightarrow> 'p fom \<Rightarrow> bool" where
+primrec eval :: "point ⇒ 'p fom ⇒ bool" where
   "eval w (Atom a)    = Val a w" |
-  "eval w (Not \<phi>)     = (\<not> eval w \<phi>)" |
-  "eval w (Imp \<phi> \<psi>)   = (eval w \<phi> \<longrightarrow> eval w \<psi>)" |
-  "eval w (F \<phi>)       = (\<exists>v\<in>W. w \<preceq> v \<and> eval v \<phi>)" |
-  "eval w (P \<phi>)       = (\<exists>v\<in>W. v \<preceq> w \<and> eval v \<phi>)" |
-  "eval w (G \<phi>)       = (\<forall>v\<in>W. w \<preceq> v \<longrightarrow> eval v \<phi>)" |
-  "eval w (H \<phi>)       = (\<forall>v\<in>W. v \<preceq> w \<longrightarrow> eval v \<phi>)"
+  "eval w (Not φ)     = (¬ eval w φ)" |
+  "eval w (Imp φ ψ)   = (eval w φ ⟶ eval w ψ)" |
+  "eval w (F φ)       = (∃v∈W. w ≼ v ∧ eval v φ)" |
+  "eval w (P φ)       = (∃v∈W. v ≼ w ∧ eval v φ)" |
+  "eval w (G φ)       = (∀v∈W. w ≼ v ⟶ eval v φ)" |
+  "eval w (H φ)       = (∀v∈W. v ≼ w ⟶ eval v φ)"
 
-abbreviation valid  ("\<Turnstile> _" [55] 55) where
-  "\<Turnstile> \<phi> \<equiv> (\<forall>w\<in>W. eval w \<phi>)"
+abbreviation valid  ("⊨ _" [55] 55) where
+  "⊨ φ ≡ (∀w∈W. eval w φ)"
 
-end  \<comment> \<open>locale Finite_Minkowski\<close>
+end  ― ‹locale Finite_Minkowski›
 
-(*\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>\<midarrow>*)
-section \<open>Model‑finding with Nitpick (example)\<close>
+(*─────────────────────────────────────────────────────────────────────────*)
+section ‹Model‑finding with Nitpick (example)›
 
-text \<open>Show that the axiom \<open>\<phi> \<longrightarrow> G (P \<phi>)\<close> (named GP) is *independent* of
-      the rest.\<close>
+text ‹Show that the axiom ‹φ ⟶ G (P φ)› (named GP) is *independent* of
+      the rest.›
 
 lemma independence_GP:
   obtains W Val
   where "finite (W::point set)"
-        "\<not> (\<forall>w\<in>W. Finite_Minkowski.eval W Val w
+        "¬ (∀w∈W. Finite_Minkowski.eval W Val w
                (Imp (Atom 0) (G (P (Atom 0)))))"
 proof -
   (* let Nitpick build a 2‑point counter‑model *)
